@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MC Modpack Translator - AGY & Multi-LLM 번역 스튜디오</title>
+  <style>
+    :root {
+      --bg-base: #0d1117;
+      --bg-panel: #161b22;
+      --bg-card: #1f2631;
+      --bg-hover: #283140;
+      --border: #30363d;
+      --text-main: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-hover: #388bfd;
+      --green: #3fb950;
+      --green-bg: rgba(63, 185, 80, 0.14);
+      --yellow: #d29922;
+      --yellow-bg: rgba(210, 153, 34, 0.15);
+      --red: #f85149;
+      --red-bg: rgba(248, 81, 73, 0.15);
+      --purple: #bc8cff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-base);
+      color: var(--text-main);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #238636, #1f6feb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 18px;
+      color: #fff;
+    }
+    .brand h1 { font-size: 18px; font-weight: 700; }
+    .brand p { font-size: 12px; color: var(--text-muted); }
+
+    .path-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      max-width: 640px;
+    }
+    input[type="text"], input[type="password"], input[type="number"], select, textarea {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+    .path-bar input { flex: 1; }
+    button {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    button:hover { background: var(--bg-hover); border-color: var(--text-muted); }
+    button.btn-primary {
+      background: #238636;
+      border-color: #2ea043;
+      color: #fff;
+    }
+    button.btn-primary:hover { background: #2ea043; }
+    button.btn-accent {
+      background: #1f6feb;
+      border-color: #388bfd;
+      color: #fff;
+    }
+    button.btn-accent:hover { background: #388bfd; }
+    button.btn-danger {
+      background: #da3633;
+      border-color: #f85149;
+      color: #fff;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Top stats strip */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      padding: 14px 24px;
+      background: #11161d;
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+    .stat-card .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+    .stat-card .val { font-size: 20px; font-weight: 700; margin-top: 2px; }
+    .stat-card .sub { font-size: 11px; color: var(--text-muted); }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      padding: 12px 24px 0;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 6px 6px 0 0;
+      padding: 10px 18px;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .tab-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.03); }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: rgba(88, 166, 255, 0.08);
+    }
+
+    .tab-content { display: none; padding: 20px 24px; }
+    .tab-content.active { display: block; }
+
+    /* Grid Layout for Tab 1 */
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 1180px) {
+      .workspace-grid { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(255,255,255,0.02);
+    }
+    .panel-header h2 { font-size: 15px; font-weight: 700; }
+    .panel-body { padding: 16px 18px; }
+
+    /* Filter toolbar */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+    .toolbar input[type="text"] { flex: 1; min-width: 180px; }
+    .chip-group { display: flex; gap: 6px; flex-wrap: wrap; }
+    .chip {
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .chip.active {
+      background: rgba(88, 166, 255, 0.18);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* Mod Table */
+    .table-wrap {
+      max-height: 620px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 9px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 12px;
+      z-index: 2;
+    }
+    tr:hover td { background: rgba(255, 255, 255, 0.03); }
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-mod { background: rgba(88, 166, 255, 0.15); color: var(--accent); }
+    .badge-quest { background: rgba(188, 140, 255, 0.15); color: var(--purple); }
+    .badge-kubejs { background: rgba(210, 153, 34, 0.15); color: var(--yellow); }
+    .badge-safe { background: var(--green-bg); color: var(--green); }
+    .badge-warning { background: var(--yellow-bg); color: var(--yellow); }
+    .badge-danger { background: var(--red-bg); color: var(--red); }
+
+    .prog-bar {
+      width: 100%;
+      height: 7px;
+      background: var(--bg-base);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .prog-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #238636, #3fb950);
+      transition: width 0.25s;
+    }
+
+    /* Simulator Box */
+    .sim-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 10px 0;
+    }
+    .slider-row input[type="range"] { flex: 1; accent-color: var(--accent); }
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .metric-item {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      border-radius: 6px;
+    }
+    .metric-item .m-label { font-size: 11px; color: var(--text-muted); }
+    .metric-item .m-val { font-size: 16px; font-weight: 700; margin-top: 2px; }
+
+    /* Provider Cards */
+    .provider-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .provider-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .provider-card:hover { border-color: var(--text-muted); }
+    .provider-card.selected {
+      border-color: var(--accent);
+      background: rgba(88, 166, 255, 0.08);
+    }
+    .provider-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .provider-cost {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--green);
+    }
+    .provider-sub {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Live Console */
+    .console-log {
+      background: #090d11;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      height: 360px;
+      overflow-y: auto;
+      padding: 12px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 12.5px;
+      color: #c9d1d9;
+    }
+    .log-line { margin-bottom: 4px; word-break: break-all; }
+    .log-line.err { color: var(--red); }
+    .log-line.ok { color: var(--green); }
+    .log-line.tm { color: var(--purple); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">MC</div>
+    <div>
+      <h1>Minecraft Modpack Translator Studio</h1>
+      <p>AGY CLI & Multi-LLM 대용량 청크 번역 · 다계층 용어집 · 리소스팩 빌더</p>
+    </div>
+  </div>
+  <div class="path-bar">
+    <input type="text" id="modpackPathInput" placeholder="모드팩 경로 입력 (예: E:\Playground\FTB Evolution 2)" />
+    <button onclick="rescanModpack(false)">🔍 스캔</button>
+    <button onclick="rescanModpack(true)" title="모드팩 내장 ko_kr.json에서 번역 메모리(TM) 추출">⚡ TM 학습 스캔</button>
+  </div>
+</header>
+
+<section class="stats-strip">
+  <div class="stat-card">
+    <div class="label">감지된 번역 대상</div>
+    <div class="val" id="statTotalEntries">-</div>
+    <div class="sub" id="statEntriesSub">모드 JAR / 퀘스트 / KubeJS</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">전체 문자열 (Keys)</div>
+    <div class="val" id="statTotalKeys">-</div>
+    <div class="sub" id="statBuiltinKo">내장 한글: -</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">번역 캐시 완료</div>
+    <div class="val" style="color: var(--green);" id="statCachedKo">-</div>
+    <div class="sub" id="statProgressPct">전체 진행률: -%</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">남은 미번역 (고유 문장)</div>
+    <div class="val" style="color: var(--yellow);" id="statUntranslated">-</div>
+    <div class="sub" id="statDedupInfo">중복 제거 후 고유: -</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">전역 TM & 영구 모드 보관소</div>
+    <div class="val" style="color: var(--purple);" id="statTmCount">-</div>
+    <div class="sub" id="statArchiveInfo">보관소 모드: -개 ($0 버전호환 재사용)</div>
+  </div>
+</section>
+
+<nav class="tabs">
+  <button class="tab-btn active" onclick="switchTab('tab-select', this)">1. 🎯 모드 선택 & 청크/비용 시뮬레이터</button>
+  <button class="tab-btn" onclick="switchTab('tab-console', this)">2. ⚡ 실시간 번역 콘솔 <span id="runningIndicator" style="display:none; color:var(--green);">● 실행중</span></button>
+  <button class="tab-btn" onclick="switchTab('tab-glossary', this)">3. 📚 공식/모드별 용어집 관리</button>
+  <button class="tab-btn" onclick="switchTab('tab-review', this)">4. 🔍 번역 검수 · 적용 · 내보내기(Export)</button>
+</nav>
+
+<!-- TAB 1: MOD SELECTION & CHUNK/COST SIMULATOR -->
+<main id="tab-select" class="tab-content active">
+  <div class="workspace-grid">
+    <!-- Left: Mod List -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>📦 번역할 모드 / 퀘스트 선택 (<span id="selectedModCount">0</span>개 선택됨)</h2>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button onclick="selectVisibleMods(true)">현재 목록 전체 선택</button>
+          <button onclick="selectVisibleMods(false)">전체 해제</button>
+          <button onclick="selectSmallUntranslated(100)">소형 모드 선택 (≤100키)</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="toolbar">
+          <input type="text" id="modSearchInput" placeholder="모드 이름, Mod ID, 파일명 검색..." oninput="renderModTable()" />
+          <div class="chip-group">
+            <span class="chip active" onclick="setFilter('untranslated', this)">미번역 있음</span>
+            <span class="chip" onclick="setFilter('all', this)">전체 보기</span>
+            <span class="chip" onclick="setFilter('version_changed', this)" title="이전 버전 번역 보관소와 비교해 원문이 변경된 항목만 필터링">🔄 버전 변경 감지</span>
+            <span class="chip" onclick="setFilter('mod_jar', this)">모드 JAR</span>
+            <span class="chip" onclick="setFilter('guidebook', this)" title="인게임 가이드북(Patchouli 책자) 및 G키 가이드(GuideMe) 항목만 필터링">📖 가이드북 · G키 설명</span>
+            <span class="chip" onclick="setFilter('ftbquests', this)">FTB Quests</span>
+            <span class="chip" onclick="setFilter('kubejs', this)">KubeJS</span>
+            <span class="chip" onclick="setFilter('done', this)">100% 완료</span>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:36px;"><input type="checkbox" id="masterCheckbox" onchange="selectVisibleMods(this.checked)" /></th>
+                <th>이름 / ID</th>
+                <th style="width:90px;">분류</th>
+                <th style="width:110px;">미번역 (고유)</th>
+                <th style="width:120px;">진행률</th>
+                <th style="width:70px;">검수</th>
+              </tr>
+            </thead>
+            <tbody id="modTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Chunk & Cost Simulator + Provider Config -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>🧮 대용량 청크 & 병렬 요청 · 예상 시간/비용 시뮬레이터</h2>
+        <span class="badge badge-mod" id="simChunkBadge">300키 · 동시 3요청</span>
+      </div>
+      <div class="panel-body">
+        <div class="sim-box">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong>1회 요청당 청크 크기 (Chunk Size)</strong>
+            <div>
+              <button style="padding:3px 8px; font-size:11px;" onclick="setChunkSize(300)">300</button>
+              <button style="padding:3px 8px; font-size:11px;" onclick="setChunkSize(600)">600</button>
+              <button style="padding:3px 8px; font-size:11px;" onclick="setChunkSize(1500)">1,500 (64K 대용량)</button>
+              <button style="padding:3px 8px; font-size:11px;" onclick="setChunkSize(2500)">2,500 (초대형)</button>
+            </div>
+          </div>
+          <div class="slider-row">
+            <input type="range" id="chunkSlider" min="20" max="3000" step="25" value="300" oninput="syncChunkInput(this.value)" />
+            <input type="number" id="chunkNumber" min="10" max="5000" value="300" style="width:80px;" onchange="syncChunkInput(this.value)" />
+            <span style="font-size:12px; color:var(--text-muted);">키/회</span>
+          </div>
+
+          <!-- Concurrency Control -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:10px; border-top:1px solid var(--border);">
+            <strong>⚡ 동시 요청 수 (병렬 워커 수)</strong>
+            <div style="display:flex; gap:4px;">
+              <button style="padding:3px 8px; font-size:11px;" onclick="syncConcurrencyInput(1)">1x (순차)</button>
+              <button style="padding:3px 8px; font-size:11px;" onclick="syncConcurrencyInput(2)">2x</button>
+              <button style="padding:3px 8px; font-size:11px;" onclick="syncConcurrencyInput(3)">3x (AGY 권장)</button>
+              <button style="padding:3px 8px; font-size:11px;" onclick="syncConcurrencyInput(4)">4x</button>
+              <button style="padding:3px 8px; font-size:11px;" onclick="syncConcurrencyInput(6)">6x (고속)</button>
+              <button style="padding:3px 8px; font-size:11px;" onclick="syncConcurrencyInput(8)">8x (API 대량)</button>
+            </div>
+          </div>
+          <div class="slider-row">
+            <input type="range" id="concurrencySlider" min="1" max="12" step="1" value="3" oninput="syncConcurrencyInput(this.value)" />
+            <input type="number" id="concurrencyNumber" min="1" max="12" value="3" style="width:80px;" onchange="syncConcurrencyInput(this.value)" />
+            <span style="font-size:12px; color:var(--text-muted);">동시 워커</span>
+          </div>
+
+          <div style="display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; margin-top:8px;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--accent); font-weight:600;" title="문장 수가 적은 소형 모드들을 설정한 청크 크기(예: 300키)가 찰 때까지 하나로 묶어 한 번에 요청함으로써 API/CLI 호출 병목을 대폭 제거합니다">
+              <input type="checkbox" id="chkPackSmallMods" checked onchange="updateCostSimulation()" />
+              📦 소형 모드 자동 묶음 배칭 (호출 병목 대폭 제거)
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="checkbox" id="chkDeduplicate" checked onchange="updateCostSimulation()" />
+              모드 간/모드 내 중복 원문 병합
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="checkbox" id="chkUseTm" checked onchange="updateCostSimulation()" />
+              전역 번역 메모리(TM) 사전 매칭 ($0)
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="checkbox" id="chkTranslateAll" onchange="updateCostSimulation()" />
+              이미 번역된 키도 재번역
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;" title="아이템·블록·몹·주문 등 고유명사와 용어에 영어 원문을 괄호로 덧붙입니다. 예: 철 주괴(Iron Ingot). 출력 토큰이 늘어 비용이 증가하며, 번역 메모리(TM) 사전 매칭은 자동으로 꺼집니다">
+              <input type="checkbox" id="chkBilingual" onchange="updateCostSimulation()" />
+              🔤 고유명사 영어 병기 — 철 주괴(Iron Ingot)
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--green); font-weight:600;" title="AGY 번역 작업이 끝나면 내 계정에 생성된 일회성 번역 세션 기록(conversation_summaries.db, jetbox_summaries_proto.pb, brain 등)을 자동으로 깔끔하게 삭제합니다">
+              <input type="checkbox" id="chkAutoCleanAgy" checked onchange="saveUserConfig()" />
+              🧹 AGY 번역 완료 시 임시 세션 기록 자동 삭제
+            </label>
+          </div>
+
+          <div class="sim-metrics">
+            <div class="metric-item">
+              <div class="m-label">실제 번역 요청 문장 (중복 제거 후)</div>
+              <div class="m-val" id="simEffectiveKeys">0 문장</div>
+              <div style="font-size:11px; color:var(--green);" id="simDedupSaved">중복 0키 자동 절약</div>
+            </div>
+            <div class="metric-item" style="border-color:rgba(88, 166, 255, 0.45); background:rgba(88, 166, 255, 0.06);">
+              <div class="m-label">⏱️ 예상 소요 시간 (선택 엔진 기준)</div>
+              <div class="m-val" style="color:var(--accent);" id="simEstimatedTime">약 0초</div>
+              <div style="font-size:11px; color:var(--green);" id="simSpeedupInfo">병렬 처리로 시간 단축</div>
+            </div>
+            <div class="metric-item">
+              <div class="m-label">총 API 요청 횟수 (적응형 청크 수)</div>
+              <div class="m-val" id="simTotalChunks">0 회</div>
+              <div style="font-size:11px; color:var(--accent);" id="simOverheadSaved">소형 청크(50) 대비 프롬프트 0% 절감</div>
+            </div>
+            <div class="metric-item">
+              <div class="m-label">예상 입출력 토큰 (Input / Output)</div>
+              <div class="m-val" id="simOutputTokens">0 토큰</div>
+              <div style="font-size:11px; color:var(--text-muted);" id="simMaxChunkOut">입력 0 + 출력 0 토큰 (청크 평균 0)</div>
+            </div>
+          </div>
+          <div style="display:none;" id="simInputTokens"></div>
+          <div style="display:none;" id="simOverheadDetail"></div>
+        </div>
+
+        <!-- Provider Selection & Cost Table -->
+        <h3 style="font-size:14px; margin-bottom:8px;">🤖 번역 엔진 (Provider) 선택 · 예상 소요 시간 & 비용 비교</h3>
+        <div class="provider-list" id="providerCardsContainer"></div>
+
+        <!-- Selected Provider Detailed Settings -->
+        <div class="sim-box" style="margin-top:14px;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div>
+              <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;">사용할 세부 모델 (Model) <span id="selectedModelPriceHint" style="color:var(--green); font-weight:600; margin-left:6px;"></span></label>
+              <select id="modelSelect" style="width:100%;" onchange="onModelSelectChange()"></select>
+            </div>
+            <div id="apiKeyBox">
+              <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:4px;" id="apiKeyLabel">API Key (또는 Ollama URL)</label>
+              <input type="password" id="apiKeyInput" style="width:100%;" placeholder="API Key 입력 (자동 저장됨)" onchange="saveUserConfig()" />
+            </div>
+          </div>
+          <div id="agyCleanupBox" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <span style="font-size:12px; color:var(--text-muted);" id="agySessionCountText">
+              🧹 AGY 임시 번역 세션 감지: 확인 중...
+            </span>
+            <button type="button" style="padding:5px 10px; font-size:12px; border-color:var(--green); color:var(--green);" onclick="cleanupAgySessionsManual()">
+              🧹 누적된 AGY 번역 세션 지금 일괄 정리
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button class="btn-primary" style="flex:1; padding:12px; font-size:15px;" id="btnStartTranslation" onclick="startTranslationJob()">
+            🚀 선택한 항목 병렬 번역 시작하기
+          </button>
+          <button class="btn-danger" style="padding:12px 18px;" id="btnStopTranslation" onclick="stopTranslationJob()" disabled>
+            ⏹ 중단
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- TAB 2: LIVE TRANSLATION CONSOLE -->
+<main id="tab-console" class="tab-content">
+  <div class="panel">
+    <div class="panel-header">
+      <h2>⚡ 실시간 병렬 번역 진행 상태 & 라이브 콘솔</h2>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-accent" onclick="switchTab('tab-review', document.querySelectorAll('.tab-btn')[3])">📦 번역 결과 리소스팩으로 바로 패키징</button>
+        <button class="btn-danger" id="btnStopTranslation2" onclick="stopTranslationJob()" disabled>⏹ 작업 중단</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="stats-strip" style="padding:0 0 14px 0; background:transparent; border:none; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));">
+        <div class="stat-card">
+          <div class="label">진행 항목 / 청크</div>
+          <div class="val" id="jobEntriesProg">0 / 0</div>
+          <div class="sub" id="jobChunksSub">완료 청크: 0 / 0</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">⏱️ 남은 예상 시간 (ETA)</div>
+          <div class="val" style="color:var(--accent);" id="jobEtaText">대기 중</div>
+          <div class="sub" id="jobSpeedSub">경과: 0초 | 속도: 0문장/초</div>
+        </div>
+        <div class="stat-card" style="border-color:rgba(88, 166, 255, 0.45); background:rgba(88, 166, 255, 0.06);">
+          <div class="label">📊 실시간 입출력 토큰량</div>
+          <div class="val" style="color:var(--accent);" id="jobLiveTokens">0 tok</div>
+          <div class="sub" id="jobLiveTokensSub">입력: 0 | 출력: 0 (0 tok/s)</div>
+        </div>
+        <div class="stat-card" style="border-color:rgba(63, 185, 80, 0.45); background:rgba(63, 185, 80, 0.06);">
+          <div class="label">💰 실시간 번역 비용</div>
+          <div class="val" style="color:var(--green);" id="jobLiveCost">$0.0000 (0원)</div>
+          <div class="sub" id="jobLiveCostSub">In $0.0000 + Out $0.0000</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">이번 세션 번역 키</div>
+          <div class="val" style="color:var(--green);" id="jobTranslatedKeys">0</div>
+          <div class="sub" id="jobConcurrencySub">동시 요청 워커: -</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">TM 매칭 / 중복 병합 절약</div>
+          <div class="val" style="color:var(--purple);"><span id="jobTmHits">0</span> <span style="font-size:13px; color:var(--accent);">/ <span id="jobDedupHits">0</span></span></div>
+          <div class="sub">TM 즉시적용 + 중복 병합</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">LLM 호출 / 자동 재시도</div>
+          <div class="val"><span id="jobLlmCalls">0</span> <span style="font-size:13px; color:var(--yellow);" id="jobRetriesCount">(재시도 0)</span></div>
+          <div class="sub">부분 저장 & 분할 재시도</div>
+        </div>
+      </div>
+
+      <!-- Real-Time Streaming Monitor Box -->
+      <div class="sim-box" style="margin-bottom:14px; border-color:var(--accent); background:rgba(88, 166, 255, 0.05);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div>
+            <span class="badge badge-mod" id="streamChunkLabel">대기 중</span>
+            <strong style="margin-left:8px; font-size:14px;" id="streamModName">번역 작업을 시작하면 실시간 토큰 수신 상태와 남은 예상 시간이 여기에 표시됩니다</strong>
+          </div>
+          <div style="font-size:12.5px; color:var(--accent); font-weight:600;" id="streamStatusText">대기 중</div>
+        </div>
+        <div class="prog-bar" style="height:10px; margin:10px 0 6px;">
+          <div class="prog-fill" id="streamProgFill" style="width:0%; background:linear-gradient(90deg, #1f6feb, #58a6ff);"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-muted);">
+          <span id="streamMetaText">전체 고유 문장 진행: 0 / 0 (0%)</span>
+          <span id="streamElapsedText">경과 시간: 0초 | 남은 시간: -</span>
+        </div>
+
+        <!-- Active Parallel Workers Live Cards -->
+        <div id="activeWorkersGrid" style="display:none; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:8px; margin-top:10px;"></div>
+
+        <div id="streamTailBox" style="display:none; margin-top:8px; padding:7px 10px; background:#090d11; border:1px solid var(--border); border-radius:6px; font-family:monospace; font-size:11.5px; color:#8b949e; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+      </div>
+
+      <div class="console-log" id="consoleLogBox">
+        <div class="log-line">대기 중... 탭 1에서 번역할 모드를 선택하고 [번역 시작하기]를 눌러주세요.</div>
+      </div>
+
+      <h3 style="font-size:14px; margin: 16px 0 8px;">✨ 최근 번역된 문자열 실시간 프리뷰</h3>
+      <div class="table-wrap" style="max-height:260px;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:28%;">Key</th>
+              <th style="width:36%;">원문 (en_us)</th>
+              <th style="width:36%;">한국어 번역 (ko_kr)</th>
+            </tr>
+          </thead>
+          <tbody id="livePreviewBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- TAB 3: GLOSSARY MANAGER -->
+<main id="tab-glossary" class="tab-content">
+  <div class="workspace-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>📚 사용자 커스텀 & 모드별 용어집 추가/편집</h2>
+        <span class="badge badge-safe" id="glossaryTotalBadge">총 0개 용어</span>
+      </div>
+      <div class="panel-body">
+        <div class="sim-box">
+          <h3 style="font-size:13.5px; margin-bottom:10px;">➕ 새 용어 단건 등록</h3>
+          <div style="display:grid; grid-template-columns: 1fr 1fr 140px 1fr auto; gap:8px; align-items:center;">
+            <input type="text" id="glOrigInput" placeholder="영어 원문 (예: Cogwheel)" />
+            <input type="text" id="glTransInput" placeholder="한국어 번역 (예: 톱니바퀴)" />
+            <input type="text" id="glModInput" placeholder="Mod ID (또는 global)" value="global" />
+            <input type="text" id="glNoteInput" placeholder="메모 (선택)" />
+            <button class="btn-primary" onclick="addGlossaryTerm()">추가/저장</button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <input type="text" id="glossarySearchInput" placeholder="등록된 용어 검색 (영어, 한국어, Mod ID)..." oninput="renderGlossaryTable()" />
+          <select id="glossaryLayerSelect" onchange="renderGlossaryTable()">
+            <option value="all">모든 계층 보기 (커스텀 + 모드별 + 공통 + 바닐라)</option>
+            <option value="custom">사용자 커스텀 사전 (user_custom.csv)</option>
+            <option value="mods">내장 모드별 전용 사전 (Create, AE2, Mekanism 등)</option>
+            <option value="global">모드 공통 사전 (global_mods.json)</option>
+            <option value="vanilla">바닐라 공식 사전 (vanilla.json)</option>
+          </select>
+        </div>
+
+        <div class="table-wrap" style="max-height:480px;">
+          <table>
+            <thead>
+              <tr>
+                <th>영어 원문 (Original)</th>
+                <th>한국어 번역 (Translated)</th>
+                <th>적용 범위 (Mod ID)</th>
+                <th>계층 / 메모</th>
+                <th style="width:70px;">관리</th>
+              </tr>
+            </thead>
+            <tbody id="glossaryTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h2>📥 대량 CSV 용어집 일괄 가져오기 / 내보내기</h2>
+      </div>
+      <div class="panel-body">
+        <p style="font-size:12.5px; color:var(--text-muted); margin-bottom:10px;">
+          형식: <code>영어원문,한국어번역,ModID,메모</code> (한 줄에 하나씩 입력 후 일괄 등록)
+        </p>
+        <textarea id="csvBulkInput" rows="12" style="width:100%; font-family:monospace;" placeholder="Original,Translated,ModID,Note&#10;Flux Capacitor,플럭스 축전기,thermal,&#10;Certus Quartz,서터스 석영,ae2,"></textarea>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+          <button class="btn-primary" onclick="importGlossaryCsv()">📥 CSV 텍스트 일괄 등록</button>
+          <button onclick="exportCustomGlossaryCsv()">📤 커스텀 용어집 텍스트로 불러오기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- TAB 4: REVIEW & RESOURCE PACK BUILDER / STANDALONE EXPORT -->
+<main id="tab-review" class="tab-content">
+  <!-- Modpack & Version Identity Bar -->
+  <div class="sim-box" style="margin-bottom:16px; border-color:rgba(88,166,255,0.4); background:rgba(88,166,255,0.05);">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+      <div>
+        <strong style="font-size:14px;">🏷️ 모드팩 & 버전별 분리 설정 (자동 감지됨 · 덮어쓰기 방지)</strong>
+        <span class="badge badge-mod" id="detectedModpackBadge" style="margin-left:8px;">모드팩 자동 감지</span>
+      </div>
+      <div style="font-size:12px; color:var(--green);" id="exportPathPreviewText">
+        📂 분리 저장 경로: <code>exports/모드팩명/버전/</code>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns: 1.3fr 0.7fr 1.5fr auto; gap:10px; align-items:end;">
+      <div>
+        <label style="font-size:11.5px; color:var(--text-muted); display:block; margin-bottom:4px;">모드팩 이름 (Modpack Name)</label>
+        <input type="text" id="modpackNameInput" placeholder="예: FTB Evolution 2" style="width:100%;" oninput="onModpackIdentityInput()" />
+      </div>
+      <div>
+        <label style="font-size:11.5px; color:var(--text-muted); display:block; margin-bottom:4px;">모드팩 버전 (Version)</label>
+        <input type="text" id="modpackVersionInput" placeholder="예: v1.4.0" style="width:100%;" oninput="onModpackIdentityInput()" />
+      </div>
+      <div>
+        <label style="font-size:11.5px; color:var(--text-muted); display:block; margin-bottom:4px;">리소스팩 / 배포 파일 접두사 (자동 생성)</label>
+        <input type="text" id="packNameInput" value="MC-Korean-Translation-Pack" style="width:100%;" oninput="updateExportPathPreview()" />
+      </div>
+      <button onclick="resetPackIdentityToDetected()" title="스캔된 모드팩의 이름과 버전으로 초기화" style="padding:8px 12px; font-size:12px;">
+        🔄 자동감지값 복원
+      </button>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px;">
+    <!-- Left Card: Direct Apply to Current Modpack -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>🛠️ 현재 모드팩 폴더에 바로 적용 (Direct Apply)</h2>
+      </div>
+      <div class="panel-body">
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+          현재 스캔된 모드팩 폴더(<code>resourcepacks/</code> 및 <code>config/ftbquests/</code>)에 해당 모드팩·버전 전용 이름으로 번역본을 즉시 생성·주입합니다.
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+            <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; cursor:pointer;">
+              <input type="checkbox" id="chkExportZip" checked /> 리소스팩 (.zip) 생성
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; cursor:pointer;" title="options.txt에 리소스팩과 한국어(ko_kr)를 미리 등록하여 인게임 리로드 튕김(LDLib/jemalloc 등) 없이 부팅 즉시 적용합니다">
+              <input type="checkbox" id="chkAutoOptions" checked /> options.txt 자동 활성화 (인게임 리로드 튕김 방지)
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; cursor:pointer;">
+              <input type="checkbox" id="chkExportQuests" checked /> FTB Quests (ko_kr) 직접 적용
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; cursor:pointer;">
+              <input type="checkbox" id="chkExportKubejs" checked /> KubeJS assets 직접 주입
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; cursor:pointer;">
+              <input type="checkbox" id="chkExportFolder" /> 리소스팩 폴더도 생성
+            </label>
+          </div>
+          <button class="btn-primary" style="padding:10px 18px; font-size:13.5px; width:100%;" onclick="buildResourcePack()">
+            🛠️ 지금 모드팩에 한글 리소스팩 · 퀘스트 · KubeJS 바로 적용하기
+          </button>
+        </div>
+        <div id="exportResultBanner" style="display:none; margin-top:12px; padding:12px; border-radius:8px; background:var(--green-bg); border:1px solid var(--green); color:var(--text-main); font-size:12.5px;"></div>
+      </div>
+    </div>
+
+    <!-- Right Card: Standalone Export & Cross-Version Mod Archive -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>📤 모드팩 · 버전별 분리 내보내기 (Standalone Export)</h2>
+      </div>
+      <div class="panel-body">
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+          <code>exports/&lt;모드팩 이름&gt;/&lt;버전&gt;/</code> 하위 폴더로 자동 분리하여 저장하므로, 다른 모드팩이나 다른 버전을 내보내도 절대 덮어써지지 않습니다.
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div>
+            <label style="font-size:12px; color:var(--text-muted); display:block;">내보내기 상위 폴더 (Base Export Directory)</label>
+            <input type="text" id="exportDirInput" placeholder="기본값: mc_translator/exports" style="width:100%;" oninput="updateExportPathPreview()" />
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+            <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; cursor:pointer;">
+              <input type="checkbox" id="chkStandaloneBundle" checked /> 통합 번들 (.zip)
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; cursor:pointer;">
+              <input type="checkbox" id="chkStandaloneRp" checked /> 리소스팩 단독 (.zip)
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; cursor:pointer;" title="모드팩 폴더에 덮어씌우는 FTB Quests(config/) + KubeJS(kubejs/) 합본">
+              <input type="checkbox" id="chkStandaloneOverride" checked /> Override (FTB Quests + KubeJS .zip)
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; cursor:pointer;">
+              <input type="checkbox" id="chkStandaloneArchive" checked /> 모드 보관소 백업 (.json)
+            </label>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn-success" style="padding:10px 16px; font-size:13.5px; flex:1;" onclick="exportStandalonePack()">
+              📤 현재 모드팩·버전 폴더로 분리 내보내기 & 다운로드
+            </button>
+            <label style="display:inline-flex; align-items:center; justify-content:center; padding:10px 14px; font-size:12.5px; background:var(--bg-input); border:1px solid var(--border); border-radius:8px; cursor:pointer; color:var(--text-main);" title="다른 PC나 이전 작업에서 내보낸 Mod_Archive.json 파일을 현재 보관소로 병합합니다">
+              📥 보관소 JSON 불러오기
+              <input type="file" id="archiveImportFileInput" accept=".json" style="display:none;" onchange="importModArchiveFile(this)" />
+            </label>
+          </div>
+          <div style="font-size:11.5px; color:var(--text-muted); background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.25); padding:8px 10px; border-radius:6px;">
+            💡 <b>자동 모드 보관소(<code>data/mod_archive/*.json</code>) 작동 중:</b> 한번 번역한 모드는 모드별로 자동 영구 저장됩니다. 다른 모드팩이나 업데이트된 버전의 모드를 열면 <b>변경되지 않은 문장은 $0 즉시 재사용</b>하고, <b>버전 업데이트로 영어 원문이 바뀐 키나 새로 추가된 키만 골라서 번역</b>합니다.
+          </div>
+        </div>
+        <div id="standaloneExportBanner" style="display:none; margin-top:12px; padding:12px; border-radius:8px; background:var(--blue-bg); border:1px solid var(--accent); color:var(--text-main); font-size:12.5px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exported Modpacks & Versions History Archive -->
+  <div class="panel" style="margin-bottom:20px;">
+    <div class="panel-header">
+      <h2>🗂️ 모드팩 · 버전별 내보내기 보관함 (Export History)</h2>
+      <span class="badge badge-safe" id="exportHistoryCountBadge">0개 버전 보관됨</span>
+    </div>
+    <div class="panel-body">
+      <div id="exportHistoryContainer" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap:12px;"></div>
+    </div>
+  </div>
+
+  <!-- Side-by-Side Translation Editor -->
+  <div class="panel">
+    <div class="panel-header">
+      <h2>🔍 모드별 번역 비교 검수 & 직접 수정</h2>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <select id="reviewEntrySelect" style="min-width:280px;" onchange="loadReviewEntry(this.value)"></select>
+        <input type="text" id="reviewSearchInput" placeholder="키, 원문, 번역문 검색..." oninput="renderReviewTable()" />
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="table-wrap" style="max-height:540px;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:24%;">JSON Key</th>
+              <th style="width:33%;">영어 원문 (en_us)</th>
+              <th style="width:33%;">한국어 번역 (ko_kr)</th>
+              <th style="width:10%;">저장</th>
+            </tr>
+          </thead>
+          <tbody id="reviewTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  let allEntries = [];
+  let selectedEntryIds = new Set();
+  let currentFilter = 'untranslated';
+  let currentProviderId = 'agy';
+  let providersMeta = [];
+  let savedSettings = {};
+  let glossaryData = null;
+  let reviewRows = [];
+  let statusPollTimer = null;
+  let currentModpackInfo = {};
+  let exportHistoryList = [];
+
+  async function api(path, method = 'GET', body = null) {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(path, opts);
+    return await res.json();
+  }
+
+  function switchTab(tabId, btnEl) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    if (btnEl) btnEl.classList.add('active');
+    if (tabId === 'tab-glossary') loadGlossary();
+    if (tabId === 'tab-review') populateReviewSelector();
+  }
+
+  async function initApp() {
+    const state = await api('/api/state');
+    document.getElementById('modpackPathInput').value = state.modpack_path || '';
+    const exportDirEl = document.getElementById('exportDirInput');
+    if (exportDirEl && state.default_export_dir && !exportDirEl.value) {
+      exportDirEl.value = state.default_export_dir;
+    }
+    savedSettings = state.settings || {};
+    if (savedSettings.provider_id) currentProviderId = savedSettings.provider_id;
+    if (savedSettings.chunk_size) {
+      document.getElementById('chunkSlider').value = savedSettings.chunk_size;
+      document.getElementById('chunkNumber').value = savedSettings.chunk_size;
+    }
+    if (savedSettings.concurrency) {
+      document.getElementById('concurrencySlider').value = savedSettings.concurrency;
+      document.getElementById('concurrencyNumber').value = savedSettings.concurrency;
+    }
+    if (savedSettings.auto_clean_agy_sessions !== undefined) {
+      document.getElementById('chkAutoCleanAgy').checked = savedSettings.auto_clean_agy_sessions !== 'false';
+    }
+    applyScanResult(state, true);
+    await updateCostSimulation();
+    startStatusPolling();
+  }
+
+  function applyScanResult(state, syncIdentity = true) {
+    allEntries = state.entries || [];
+    const totals = state.totals || {};
+    currentModpackInfo = state.modpack_info || {};
+    exportHistoryList = state.export_history || [];
+
+    document.getElementById('statTotalEntries').textContent = (totals.total_entries || 0).toLocaleString() + ' 개';
+    if (currentModpackInfo.safe_name) {
+      const mcTag = currentModpackInfo.mc_version ? ` · MC ${currentModpackInfo.mc_version}` : '';
+      document.getElementById('statEntriesSub').textContent = `${currentModpackInfo.safe_name} (${currentModpackInfo.safe_version || 'latest'}${mcTag})`;
+    } else {
+      document.getElementById('statEntriesSub').textContent = '모드 JAR / 퀘스트 / KubeJS';
+    }
+    document.getElementById('statTotalKeys').textContent = (totals.total_keys || 0).toLocaleString();
+    document.getElementById('statBuiltinKo').textContent = `모드 내장 한글: ${(totals.builtin_ko_keys || 0).toLocaleString()}`;
+    document.getElementById('statCachedKo').textContent = (totals.cached_ko_keys || 0).toLocaleString();
+    document.getElementById('statProgressPct').textContent = `전체 한글화율: ${totals.overall_progress_pct || 0}%`;
+    document.getElementById('statUntranslated').textContent = (totals.untranslated_keys || 0).toLocaleString();
+    const verChanged = totals.version_changed_keys || 0;
+    const dedupText = `중복 제거 시 고유 ${(totals.unique_untranslated || 0).toLocaleString()}문장` + (verChanged > 0 ? ` · 🔄버전변경 ${verChanged.toLocaleString()}키` : '');
+    document.getElementById('statDedupInfo').textContent = dedupText;
+    document.getElementById('statTmCount').textContent = (totals.tm_unique_pairs_count || 0).toLocaleString() + ' 쌍';
+    const archEl = document.getElementById('statArchiveInfo');
+    if (archEl) {
+      archEl.textContent = `영구 보관 모드: ${(totals.archive_files_count || 0).toLocaleString()}개 ($0 버전호환)`;
+    }
+    updateAgySessionStatsUI(state.agy_session_stats);
+
+    if (syncIdentity && currentModpackInfo.safe_name) {
+      resetPackIdentityToDetected();
+    } else {
+      updateExportPathPreview();
+    }
+    renderExportHistory();
+    renderModTable();
+  }
+
+  function resetPackIdentityToDetected() {
+    const mpName = currentModpackInfo.safe_name || 'Minecraft_Modpack';
+    const mpVer = currentModpackInfo.safe_version || 'latest';
+    const defTitle = currentModpackInfo.default_pack_title || `${mpName.replace(/\s+/g, '_')}_${mpVer}_한글패치`;
+    const mcVer = currentModpackInfo.mc_version ? ` (MC ${currentModpackInfo.mc_version})` : '';
+
+    const nameEl = document.getElementById('modpackNameInput');
+    const verEl = document.getElementById('modpackVersionInput');
+    const packEl = document.getElementById('packNameInput');
+    const badgeEl = document.getElementById('detectedModpackBadge');
+
+    if (nameEl) nameEl.value = mpName;
+    if (verEl) verEl.value = mpVer;
+    if (packEl) packEl.value = defTitle;
+    if (badgeEl) badgeEl.textContent = `${mpName} · ${mpVer}${mcVer}`;
+    updateExportPathPreview();
+  }
+
+  function onModpackIdentityInput() {
+    const mpName = (document.getElementById('modpackNameInput').value || '').trim() || 'Minecraft_Modpack';
+    let mpVer = (document.getElementById('modpackVersionInput').value || '').trim() || 'latest';
+    if (mpVer.toLowerCase() !== 'latest' && !mpVer.toLowerCase().startsWith('v')) {
+      mpVer = 'v' + mpVer;
+    }
+    const slug = mpName.replace(/[<>:"/\\|?*]+/g, '_').replace(/\s+/g, '_');
+    const verSlug = mpVer.replace(/[<>:"/\\|?*]+/g, '_');
+    const autoTitle = verSlug.toLowerCase() !== 'latest' ? `${slug}_${verSlug}_한글패치` : `${slug}_한글패치`;
+    document.getElementById('packNameInput').value = autoTitle;
+    updateExportPathPreview();
+  }
+
+  function updateExportPathPreview() {
+    const mpName = ((document.getElementById('modpackNameInput')?.value || '').trim() || 'Minecraft_Modpack').replace(/[<>:"/\\|?*]+/g, '_');
+    let mpVer = ((document.getElementById('modpackVersionInput')?.value || '').trim() || 'latest').replace(/[<>:"/\\|?*]+/g, '_');
+    if (mpVer.toLowerCase() !== 'latest' && !mpVer.toLowerCase().startsWith('v')) {
+      mpVer = 'v' + mpVer;
+    }
+    const packName = ((document.getElementById('packNameInput')?.value || '').trim() || 'MC-Korean-Translation-Pack');
+    const baseDir = ((document.getElementById('exportDirInput')?.value || '').trim() || 'exports');
+    const previewEl = document.getElementById('exportPathPreviewText');
+    if (previewEl) {
+      previewEl.innerHTML = `📂 분리 저장 경로: <code>${escapeHtml(baseDir)}\\${escapeHtml(mpName)}\\${escapeHtml(mpVer)}\\${escapeHtml(packName)}_*.zip</code>`;
+    }
+  }
+
+  function renderExportHistory() {
+    const container = document.getElementById('exportHistoryContainer');
+    const badge = document.getElementById('exportHistoryCountBadge');
+    if (!container) return;
+    if (badge) badge.textContent = `${exportHistoryList.length}개 모드팩·버전 보관됨`;
+
+    if (!exportHistoryList || exportHistoryList.length === 0) {
+      container.innerHTML = `<div style="grid-column:1/-1; color:var(--text-muted); font-size:12.5px; padding:12px;">아직 별도 내보내기(Export)된 이력이 없습니다. 위에서 [📤 현재 모드팩·버전 폴더로 분리 내보내기]를 누르면 모드팩 및 버전별로 자동 분류되어 여기에 보관됩니다.</div>`;
+      return;
+    }
+
+    container.innerHTML = exportHistoryList.map(item => {
+      const mcBadge = item.mc_version ? `<span class="badge badge-kubejs" style="margin-left:4px;">MC ${escapeHtml(item.mc_version)}</span>` : '';
+      const dlLinks = (item.download_files || []).map(f => {
+        const rel = f.rel_path || f.filename;
+        const sizeStr = f.size_kb ? ` (${f.size_kb} KB)` : '';
+        return `
+          <a href="/api/export/download?file=${encodeURIComponent(rel)}" download="${escapeAttr(f.filename)}"
+             style="display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border-radius:5px; background:var(--bg-panel); border:1px solid var(--border); color:var(--accent); text-decoration:none; font-size:11.5px; font-weight:600;">
+            ⬇️ ${escapeHtml(f.label)}${escapeHtml(sizeStr)}
+          </a>
+        `;
+      }).join('');
+
+      return `
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:6px;">
+            <div>
+              <strong style="font-size:13.5px; color:var(--text-main);">${escapeHtml(item.modpack_name)}</strong>
+              <span class="badge badge-quest" style="margin-left:6px;">${escapeHtml(item.modpack_version)}</span>
+              ${mcBadge}
+            </div>
+            <span style="font-size:11px; color:var(--text-muted);">${escapeHtml(item.exported_at)}</span>
+          </div>
+          <div style="font-size:11.5px; color:var(--text-muted); margin-bottom:8px;">
+            폴더: <code>${escapeHtml(item.export_dir)}</code><br/>
+            모드 ${item.mod_namespaces_count || 0}개 · 퀘스트 ${item.ftbquest_files_written || 0}개 · KubeJS ${item.kubejs_files_written || 0}개 · 총 ${(item.total_exported_keys || 0).toLocaleString()}키
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px;">${dlLinks}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function rescanModpack(seedTm = false) {
+    const path = document.getElementById('modpackPathInput').value.trim();
+    const res = await api('/api/scan', 'POST', { modpack_path: path, seed_tm: seedTm });
+    applyScanResult(res, true);
+    await updateCostSimulation();
+  }
+
+  function setFilter(f, el) {
+    currentFilter = f;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    if (el) el.classList.add('active');
+    renderModTable();
+  }
+
+  function getFilteredEntries() {
+    const q = document.getElementById('modSearchInput').value.trim().toLowerCase();
+    return allEntries.filter(e => {
+      if (currentFilter === 'untranslated' && e.untranslated_keys === 0) return false;
+      if (currentFilter === 'version_changed' && !(e.version_changed_keys > 0)) return false;
+      if (currentFilter === 'done' && e.untranslated_keys > 0) return false;
+      if (currentFilter === 'mod_jar' && e.source_type !== 'mod_jar') return false;
+      if (currentFilter === 'guidebook' && e.source_type !== 'guideme' && e.source_type !== 'patchouli') return false;
+      if (currentFilter === 'ftbquests' && e.source_type !== 'ftbquests') return false;
+      if (currentFilter === 'kubejs' && e.source_type !== 'kubejs') return false;
+      if (q) {
+        const hay = `${e.display_name} ${e.mod_id} ${e.source_file} ${e.version || ''}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderModTable() {
+    const filtered = getFilteredEntries();
+    const tbody = document.getElementById('modTableBody');
+    const rowsHtml = filtered.map(e => {
+      const checked = selectedEntryIds.has(e.entry_id) ? 'checked' : '';
+      let typeBadge = '<span class="badge badge-mod">MOD</span>';
+      if (e.source_type === 'guideme') typeBadge = '<span class="badge badge-safe" title="GuideMe G키 가이드북 (.md)">G-GUIDE</span>';
+      if (e.source_type === 'patchouli') typeBadge = '<span class="badge badge-quest" title="Patchouli 인게임 가이드북 책자 (.json)">BOOK</span>';
+      if (e.source_type === 'ftbquests') typeBadge = '<span class="badge badge-quest">QUEST</span>';
+      if (e.source_type === 'kubejs') typeBadge = '<span class="badge badge-kubejs">KUBEJS</span>';
+      const verText = e.version ? ` · v${escapeHtml(e.version)}` : '';
+      const verChangedBadge = (e.version_changed_keys > 0)
+        ? `<span class="badge" style="background:rgba(210,153,34,0.2); color:var(--yellow); margin-left:4px;" title="모드 버전이 바뀌면서 영어 원문이 변경되어 재번역이 필요한 키 수">🔄 버전변경 ${e.version_changed_keys}키</span>`
+        : '';
+
+      return `
+        <tr>
+          <td><input type="checkbox" ${checked} onchange="toggleModSelect('${e.entry_id}', this.checked)" /></td>
+          <td>
+            <div style="font-weight:600;">${escapeHtml(e.display_name)} ${verChangedBadge}</div>
+            <div style="font-size:11px; color:var(--text-muted);">${escapeHtml(e.mod_id)}${verText} · 총 ${e.total_keys.toLocaleString()}키 (재사용 ${(e.cached_ko_keys || 0).toLocaleString()}키)</div>
+          </td>
+          <td>${typeBadge}</td>
+          <td>
+            <span style="font-weight:700; color:${e.untranslated_keys > 0 ? 'var(--yellow)' : 'var(--green)'};">
+              ${e.untranslated_keys.toLocaleString()}
+            </span>
+            <span style="font-size:11px; color:var(--text-muted);">(${e.unique_untranslated.toLocaleString()})</span>
+          </td>
+          <td>
+            <div style="font-size:11.5px;">${e.progress_pct}%</div>
+            <div class="prog-bar"><div class="prog-fill" style="width:${e.progress_pct}%;"></div></div>
+          </td>
+          <td>
+            <button style="padding:4px 8px; font-size:11px;" onclick="openReviewFor('${e.entry_id}')">보기</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+    tbody.innerHTML = rowsHtml || '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:24px;">조건에 맞는 항목이 없습니다.</td></tr>';
+    document.getElementById('selectedModCount').textContent = selectedEntryIds.size.toLocaleString();
+  }
+
+  function toggleModSelect(entryId, isChecked) {
+    if (isChecked) selectedEntryIds.add(entryId);
+    else selectedEntryIds.delete(entryId);
+    document.getElementById('selectedModCount').textContent = selectedEntryIds.size.toLocaleString();
+    updateCostSimulation();
+  }
+
+  function selectVisibleMods(check) {
+    const filtered = getFilteredEntries();
+    filtered.forEach(e => {
+      if (check) selectedEntryIds.add(e.entry_id);
+      else selectedEntryIds.delete(e.entry_id);
+    });
+    document.getElementById('masterCheckbox').checked = check;
+    renderModTable();
+    updateCostSimulation();
+  }
+
+  function selectSmallUntranslated(maxKeys) {
+    selectedEntryIds.clear();
+    allEntries.forEach(e => {
+      if (e.untranslated_keys > 0 && e.unique_untranslated <= maxKeys) {
+        selectedEntryIds.add(e.entry_id);
+      }
+    });
+    renderModTable();
+    updateCostSimulation();
+  }
+
+  function setChunkSize(val) {
+    syncChunkInput(val);
+  }
+
+  function syncChunkInput(val) {
+    const num = Math.max(10, Math.min(5000, parseInt(val || 300, 10)));
+    document.getElementById('chunkSlider').value = Math.min(3000, num);
+    document.getElementById('chunkNumber').value = num;
+    const conc = parseInt(document.getElementById('concurrencyNumber').value || 3, 10);
+    document.getElementById('simChunkBadge').textContent = `${num}키 · 동시 ${conc}요청`;
+    updateCostSimulation();
+  }
+
+  function syncConcurrencyInput(val) {
+    const num = Math.max(1, Math.min(12, parseInt(val || 3, 10)));
+    document.getElementById('concurrencySlider').value = num;
+    document.getElementById('concurrencyNumber').value = num;
+    const chunk = parseInt(document.getElementById('chunkNumber').value || 300, 10);
+    document.getElementById('simChunkBadge').textContent = `${chunk}키 · 동시 ${num}요청`;
+    updateCostSimulation();
+  }
+
+  async function updateCostSimulation() {
+    const chunkSize = parseInt(document.getElementById('chunkNumber').value || 300, 10);
+    const concurrency = parseInt(document.getElementById('concurrencyNumber').value || 3, 10);
+    const deduplicate = document.getElementById('chkDeduplicate').checked;
+    const translateAll = document.getElementById('chkTranslateAll').checked;
+    const packSmallMods = document.getElementById('chkPackSmallMods').checked;
+
+    const sim = await api('/api/simulate', 'POST', {
+      entry_ids: Array.from(selectedEntryIds),
+      chunk_size: chunkSize,
+      concurrency: concurrency,
+      deduplicate: deduplicate,
+      translate_all: translateAll,
+      pack_small_mods: packSmallMods,
+      bilingual: document.getElementById('chkBilingual').checked,
+    });
+
+    document.getElementById('simEffectiveKeys').textContent = `${sim.total_effective_keys.toLocaleString()} 문장 (원본 ${sim.total_raw_keys.toLocaleString()}키)`;
+    document.getElementById('simDedupSaved').textContent = `중복 ${sim.dedup_saved_keys.toLocaleString()}개 키 자동 병합 절약`;
+    document.getElementById('simTotalChunks').textContent = `${sim.total_chunks.toLocaleString()} 회 호출`;
+    if (sim.saved_requests_by_packing > 0) {
+      document.getElementById('simOverheadSaved').textContent =
+        `📦 소형 모드 묶음으로 ${sim.unpacked_chunks.toLocaleString()}회 → ${sim.total_chunks.toLocaleString()}회 압축 (-${sim.saved_requests_by_packing.toLocaleString()}회 병목 제거!)`;
+    } else {
+      document.getElementById('simOverheadSaved').textContent =
+        `소형 청크(50키, ${sim.baseline_small_chunks}회) 대비 프롬프트 오버헤드 ${sim.overhead_saved_pct}% 절감`;
+    }
+    const totTok = (sim.total_input_tokens || 0) + (sim.total_output_tokens || 0);
+    document.getElementById('simOutputTokens').textContent = `총 약 ${totTok.toLocaleString()} 토큰`;
+    document.getElementById('simMaxChunkOut').textContent =
+      `입력 ${(sim.total_input_tokens || 0).toLocaleString()} + 출력 ${(sim.total_output_tokens || 0).toLocaleString()} tok (청크 평균 ${sim.max_single_chunk_output_tokens.toLocaleString()} tok)`;
+
+    providersMeta = sim.providers || [];
+    renderProviderCards();
+  }
+
+  function renderProviderCards() {
+    const container = document.getElementById('providerCardsContainer');
+    const activeSpec = providersMeta.find(p => p.provider_id === currentProviderId) || providersMeta[0];
+    if (activeSpec) {
+      document.getElementById('simEstimatedTime').textContent = activeSpec.estimated_time_text || '약 0초';
+      if (activeSpec.effective_concurrency > 1 && activeSpec.speedup_factor > 1.0) {
+        document.getElementById('simSpeedupInfo').textContent =
+          `동시 ${activeSpec.effective_concurrency}워커 가동 · 순차(${activeSpec.serial_time_text}) 대비 ${activeSpec.speedup_factor}배 단축`;
+      } else {
+        document.getElementById('simSpeedupInfo').textContent = `단일 워커 순차 실행 기준`;
+      }
+    }
+
+    container.innerHTML = providersMeta.map(p => {
+      const isSel = p.provider_id === currentProviderId ? 'selected' : '';
+      let safetyBadge = `<span class="badge badge-safe">${p.safety_msg}</span>`;
+      if (p.safety_status === 'warning') safetyBadge = `<span class="badge badge-warning">${p.safety_msg}</span>`;
+      if (p.safety_status === 'danger') safetyBadge = `<span class="badge badge-danger">${p.safety_msg}</span>`;
+
+      const selModelForP = savedSettings[`model_${p.provider_id}`] || p.default_model;
+      const mCostObj = (p.model_costs && p.model_costs[selModelForP]) || null;
+
+      let costStr = '';
+      if (p.cost_usd === 0 && (!mCostObj || mCostObj.equiv_total_cost_usd === 0)) {
+        costStr = '무료 ($0.00)';
+      } else {
+        const dispUsd = mCostObj ? mCostObj.equiv_total_cost_usd : p.cost_usd;
+        const dispKrw = mCostObj ? Math.round(mCostObj.equiv_total_cost_krw) : p.cost_krw;
+        costStr = `$${dispUsd.toFixed(3)} (약 ${dispKrw.toLocaleString()}원)`;
+      }
+
+      const timeStr = `⏱️ ${p.estimated_time_text || '0초'} (동시 ${p.effective_concurrency}x)`;
+      const rateInfo = (p.input_price_per_1m > 0 || p.output_price_per_1m > 0)
+        ? ` · 단가 In $${p.input_price_per_1m}/1M, Out $${p.output_price_per_1m}/1M`
+        : '';
+
+      return `
+        <div class="provider-card ${isSel}" onclick="selectProvider('${p.provider_id}')">
+          <div class="provider-top">
+            <div>
+              <strong>${escapeHtml(p.name)}</strong>
+              <span class="badge badge-mod" style="margin-left:6px;">${escapeHtml(p.badge)}</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span class="badge badge-quest" style="font-size:12px;">${timeStr}</span>
+              <span class="provider-cost">${costStr}</span>
+            </div>
+          </div>
+          <div class="provider-sub">
+            <span>권장 청크: ≤${p.recommended_max_chunk_keys}키 · 최대 병렬: ${p.max_concurrency}워커 · 출력 한도: ${p.max_output_tokens.toLocaleString()}토큰${rateInfo}</span>
+            ${safetyBadge}
+          </div>
+        </div>
+      `;
+    }).join('');
+    syncProviderModelSelect();
+  }
+
+  function selectProvider(pid) {
+    currentProviderId = pid;
+    const spec = providersMeta.find(p => p.provider_id === pid);
+    if (spec && spec.default_concurrency) {
+      document.getElementById('concurrencySlider').value = spec.default_concurrency;
+      document.getElementById('concurrencyNumber').value = spec.default_concurrency;
+      const chunk = parseInt(document.getElementById('chunkNumber').value || 300, 10);
+      document.getElementById('simChunkBadge').textContent = `${chunk}키 · 동시 ${spec.default_concurrency}요청`;
+    }
+    updateCostSimulation();
+    saveUserConfig();
+  }
+
+  function updateSelectedModelPriceHint() {
+    const hintEl = document.getElementById('selectedModelPriceHint');
+    if (!hintEl) return;
+    const spec = providersMeta.find(p => p.provider_id === currentProviderId);
+    const sel = document.getElementById('modelSelect');
+    if (!spec || !sel) {
+      hintEl.textContent = '';
+      return;
+    }
+    const mName = sel.value || spec.default_model;
+    const mCost = (spec.model_costs && spec.model_costs[mName]) || null;
+    if (!mCost) {
+      hintEl.textContent = '';
+      return;
+    }
+    if (mCost.is_free_tier || !(mCost.equiv_total_cost_usd > 0)) {
+      hintEl.textContent = `[무료 $0.00]`;
+    } else {
+      hintEl.textContent = `[예상 $${mCost.equiv_total_cost_usd.toFixed(4)} / 약 ${Math.round(mCost.equiv_total_cost_krw).toLocaleString()}원 (In $${mCost.input_price_per_1m}/1M · Out $${mCost.output_price_per_1m}/1M)]`;
+    }
+  }
+
+  function onModelSelectChange() {
+    const sel = document.getElementById('modelSelect');
+    if (sel) {
+      savedSettings[`model_${currentProviderId}`] = sel.value;
+    }
+    updateSelectedModelPriceHint();
+    renderProviderCards();
+    saveUserConfig();
+  }
+
+  function getSharedGeminiApiKey() {
+    return (
+      savedSettings[`apikey_${currentProviderId}`] ||
+      savedSettings.apikey_gemini_flash ||
+      savedSettings.apikey_gemini_pro ||
+      savedSettings.apikey_gemini_argon ||
+      savedSettings.apikey_gemini_lite ||
+      ''
+    );
+  }
+
+  function syncProviderModelSelect() {
+    const spec = providersMeta.find(p => p.provider_id === currentProviderId);
+    if (!spec) return;
+    const sel = document.getElementById('modelSelect');
+    const savedModel = savedSettings[`model_${currentProviderId}`] || spec.default_model;
+    sel.innerHTML = spec.available_models.map(m => {
+      const mc = (spec.model_costs && spec.model_costs[m]) || null;
+      let priceTag = '';
+      if (mc && !mc.is_free_tier && mc.equiv_total_cost_usd > 0) {
+        priceTag = ` ($${mc.equiv_total_cost_usd.toFixed(3)} / 약 ${Math.round(mc.equiv_total_cost_krw).toLocaleString()}원)`;
+      }
+      return `<option value="${m}" ${m === savedModel ? 'selected' : ''}>${m}${priceTag}</option>`;
+    }).join('');
+    updateSelectedModelPriceHint();
+
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const apiKeyLabel = document.getElementById('apiKeyLabel');
+    if (currentProviderId === 'agy') {
+      apiKeyLabel.textContent = 'AGY CLI 연동 (별도 API Key 불필요)';
+      apiKeyInput.value = '';
+      apiKeyInput.disabled = true;
+      apiKeyInput.placeholder = '로컬 설치된 agy CLI 세션을 병렬 프로세스로 실행합니다';
+    } else if (currentProviderId === 'ollama') {
+      apiKeyLabel.textContent = 'Ollama 서버 주소';
+      apiKeyInput.type = 'text';
+      apiKeyInput.disabled = false;
+      apiKeyInput.value = savedSettings.ollama_url || 'http://localhost:11434';
+    } else if (currentProviderId === 'gemini_pro' || currentProviderId === 'gemini_argon') {
+      apiKeyLabel.textContent = `${spec.name} API Key (비워두면 로컬 AGY CLI로 자동 실행)`;
+      apiKeyInput.type = 'password';
+      apiKeyInput.disabled = false;
+      apiKeyInput.value = getSharedGeminiApiKey();
+      apiKeyInput.placeholder = 'Gemini API Key 입력 (미입력 시 AGY CLI 자동 연동)';
+    } else if (currentProviderId === 'gemini_flash' || currentProviderId === 'gemini_lite') {
+      apiKeyLabel.textContent = `${spec.name} API Key`;
+      apiKeyInput.type = 'password';
+      apiKeyInput.disabled = false;
+      apiKeyInput.value = getSharedGeminiApiKey();
+      apiKeyInput.placeholder = 'Google AI Studio API Key 입력...';
+    } else {
+      apiKeyLabel.textContent = `${spec.name} API Key`;
+      apiKeyInput.type = 'password';
+      apiKeyInput.disabled = false;
+      apiKeyInput.value = savedSettings[`apikey_${currentProviderId}`] || '';
+      apiKeyInput.placeholder = 'API Key 입력...';
+    }
+  }
+
+  async function saveUserConfig() {
+    const model = document.getElementById('modelSelect').value;
+    const keyVal = document.getElementById('apiKeyInput').value.trim();
+    const chunkSize = document.getElementById('chunkNumber').value;
+    const concurrency = document.getElementById('concurrencyNumber').value;
+
+    const payload = {
+      provider_id: currentProviderId,
+      chunk_size: String(chunkSize),
+      concurrency: String(concurrency),
+      auto_clean_agy_sessions: String(document.getElementById('chkAutoCleanAgy')?.checked !== false),
+      [`model_${currentProviderId}`]: model,
+    };
+    if (currentProviderId === 'ollama') {
+      payload.ollama_url = keyVal || 'http://localhost:11434';
+    } else if (currentProviderId !== 'agy' && keyVal) {
+      payload[`apikey_${currentProviderId}`] = keyVal;
+    }
+    savedSettings = Object.assign(savedSettings, payload);
+    await api('/api/settings', 'POST', payload);
+  }
+
+  async function startTranslationJob() {
+    if (selectedEntryIds.size === 0) {
+      alert('번역할 모드나 퀘스트를 최소 1개 이상 선택해 주세요!');
+      return;
+    }
+    await saveUserConfig();
+    const model = document.getElementById('modelSelect').value;
+    const keyVal = document.getElementById('apiKeyInput').value.trim();
+    const chunkSize = parseInt(document.getElementById('chunkNumber').value || 300, 10);
+    const concurrency = parseInt(document.getElementById('concurrencyNumber').value || 3, 10);
+
+    const res = await api('/api/translate/start', 'POST', {
+      entry_ids: Array.from(selectedEntryIds),
+      provider_id: currentProviderId,
+      model: model,
+      api_key: currentProviderId === 'ollama' ? '' : keyVal,
+      ollama_url: currentProviderId === 'ollama' ? keyVal : 'http://localhost:11434',
+      chunk_size: chunkSize,
+      concurrency: concurrency,
+      deduplicate: document.getElementById('chkDeduplicate').checked,
+      use_tm_prematch: document.getElementById('chkUseTm').checked,
+      translate_all: document.getElementById('chkTranslateAll').checked,
+      pack_small_mods: document.getElementById('chkPackSmallMods').checked,
+      auto_clean_agy_sessions: document.getElementById('chkAutoCleanAgy').checked,
+      bilingual: document.getElementById('chkBilingual').checked,
+    });
+
+    if (res.error) {
+      alert(res.error);
+      return;
+    }
+    switchTab('tab-console', document.querySelectorAll('.tab-btn')[1]);
+  }
+
+  async function stopTranslationJob() {
+    await api('/api/translate/stop', 'POST');
+  }
+
+  function updateAgySessionStatsUI(stats) {
+    const el = document.getElementById('agySessionCountText');
+    if (!el || !stats) return;
+    const cnt = stats.translation_sessions_count || 0;
+    if (cnt > 0) {
+      el.innerHTML = `🧹 내 계정에 남은 임시 번역 세션: <b style="color:var(--yellow);">${cnt.toLocaleString()}개</b> (일반 대화 내역은 안전하게 보호됨)`;
+    } else {
+      el.innerHTML = `✨ 내 계정에 남은 임시 번역 세션: <b style="color:var(--green);">0개 (깨끗함)</b>`;
+    }
+  }
+
+  async function cleanupAgySessionsManual() {
+    const res = await api('/api/agy/cleanup', 'POST', {});
+    updateAgySessionStatsUI(res.agy_session_stats);
+    alert(`🧹 AGY 임시 번역 세션 정리 완료!\n• 삭제된 번역 세션: ${(res.cleaned_sessions_count || 0).toLocaleString()}개\n• 정리된 DB 파일: ${(res.cleaned_db_files || 0).toLocaleString()}개\n• 남은 일반 대화 세션: ${(res.remaining_sessions_count || 0).toLocaleString()}개`);
+  }
+
+  function startStatusPolling() {
+    if (statusPollTimer) clearInterval(statusPollTimer);
+    statusPollTimer = setInterval(async () => {
+      const st = await api('/api/translate/status');
+      const isRunning = st.running;
+      document.getElementById('runningIndicator').style.display = isRunning ? 'inline' : 'none';
+      document.getElementById('btnStartTranslation').disabled = isRunning;
+      document.getElementById('btnStopTranslation').disabled = !isRunning;
+      document.getElementById('btnStopTranslation2').disabled = !isRunning;
+
+      if (st.summary) {
+        const s = st.summary;
+        document.getElementById('jobEntriesProg').textContent = `${s.completed_entries || 0} / ${s.total_entries || 0}`;
+        document.getElementById('jobChunksSub').textContent = `완료 청크: ${s.completed_chunks_all || 0} / ${s.total_chunks_all || 0}`;
+        document.getElementById('jobEtaText').textContent = s.eta_text || (isRunning ? '계산 중...' : '대기 중');
+        document.getElementById('jobSpeedSub').textContent = `경과: ${s.elapsed_text || '0초'} | 속도: ${s.speed_sentences_per_sec || 0}문장/초`;
+        document.getElementById('jobTranslatedKeys').textContent = (s.translated_keys || 0).toLocaleString();
+        document.getElementById('jobConcurrencySub').textContent = `동시 요청 워커: ${s.concurrency || 1}개 병렬 (${s.model || ''})`;
+        document.getElementById('jobTmHits').textContent = (s.tm_hits || 0).toLocaleString();
+        document.getElementById('jobDedupHits').textContent = (s.dedup_hits || 0).toLocaleString();
+        document.getElementById('jobLlmCalls').textContent = (s.llm_calls || 0).toLocaleString();
+        document.getElementById('jobRetriesCount').textContent = `(재시도 ${s.retries_count || 0})`;
+
+        // Real-time Input / Output Tokens & Cost
+        const inTok = s.input_tokens || 0;
+        const outTok = s.output_tokens || 0;
+        const totTok = s.total_tokens || (inTok + outTok);
+        const tokSpeed = s.tokens_per_sec || 0;
+        document.getElementById('jobLiveTokens').textContent = `${totTok.toLocaleString()} tok`;
+        document.getElementById('jobLiveTokensSub').textContent =
+          `입력: ${inTok.toLocaleString()} | 출력: ${outTok.toLocaleString()} (${tokSpeed} tok/s)`;
+
+        const eqUsd = s.equiv_total_cost_usd || 0;
+        const eqKrw = Math.round(s.equiv_total_cost_krw || 0);
+        const eqInUsd = s.equiv_input_cost_usd || 0;
+        const eqOutUsd = s.equiv_output_cost_usd || 0;
+        if (s.is_free_tier) {
+          document.getElementById('jobLiveCost').textContent = '무료 ($0)';
+          document.getElementById('jobLiveCostSub').textContent = '구독/로컬 엔진 · 비용 계산 없음';
+        } else {
+          const billUsd = s.billed_total_cost_usd || eqUsd;
+          const billKrw = Math.round(s.billed_total_cost_krw || eqKrw);
+          document.getElementById('jobLiveCost').textContent = `$${billUsd.toFixed(4)} (약 ${billKrw.toLocaleString()}원)`;
+          document.getElementById('jobLiveCostSub').textContent =
+            `In $${eqInUsd.toFixed(4)} + Out $${eqOutUsd.toFixed(4)} ($${s.input_price_per_1m || 0}/$${s.output_price_per_1m || 0} /1M)`;
+        }
+      }
+
+      if (st.stream && st.stream.mod_name) {
+        const sr = st.stream;
+        const doneC = sr.done_count || 0;
+        const totC = sr.total_count || 1;
+        const pct = Math.min(100, Math.round((doneC / Math.max(1, totC)) * 100));
+        const workersCount = sr.active_workers_count || 0;
+
+        document.getElementById('streamChunkLabel').textContent =
+          workersCount > 1 ? `⚡ 병렬 ${workersCount}워커 가동 중` : (sr.chunk_label || '진행 중');
+        document.getElementById('streamModName').textContent = sr.mod_name;
+        document.getElementById('streamStatusText').textContent =
+          sr.eta_text ? `⏱️ 남은 예상 시간: ${sr.eta_text} (${sr.speed_sentences_per_sec || 0}문장/초 · ${sr.tokens_per_sec || 0}tok/s)` : (sr.status_text || '');
+        document.getElementById('streamProgFill').style.width = `${pct}%`;
+        document.getElementById('streamMetaText').textContent =
+          `전체 고유 문장 실시간 진행: ${doneC.toLocaleString()} / ${totC.toLocaleString()} (${pct}%) | 실시간 토큰: In ${(sr.input_tokens || 0).toLocaleString()} / Out ${(sr.output_tokens || 0).toLocaleString()} tok`;
+        const srCostUsd = sr.equiv_total_cost_usd || 0;
+        const srCostKrw = Math.round(sr.equiv_total_cost_krw || 0);
+        const srCostLabel = sr.is_free_tier
+          ? '무료 ($0)'
+          : `$${srCostUsd.toFixed(4)} (약 ${srCostKrw.toLocaleString()}원)`;
+        document.getElementById('streamElapsedText').textContent =
+          `경과: ${sr.elapsed_text || (sr.elapsed_sec + '초')} | 실시간 비용: ${srCostLabel} | 버퍼: ${(sr.chars_received || 0).toLocaleString()}자`;
+
+        const workersGrid = document.getElementById('activeWorkersGrid');
+        const workers = sr.active_workers || [];
+        if (workers.length > 0) {
+          workersGrid.style.display = 'grid';
+          workersGrid.innerHTML = workers.map((w, idx) => {
+            const wPct = Math.min(100, Math.round(((w.done_count || 0) / Math.max(1, w.total_count || 1)) * 100));
+            const wTokTxt = (w.worker_input_tokens || w.worker_output_tokens)
+              ? ` · In ${(w.worker_input_tokens || 0).toLocaleString()} / Out ${(w.worker_output_tokens || 0).toLocaleString()} tok`
+              : '';
+            return `
+              <div style="background:#0d1117; border:1px solid var(--border); border-radius:6px; padding:8px 10px; font-size:11.5px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                  <strong style="color:var(--accent); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:68%;">
+                    [W${idx + 1}] ${escapeHtml(w.mod_name)}
+                  </strong>
+                  <span class="badge badge-mod" style="font-size:10px;">${escapeHtml(w.chunk_label)}</span>
+                </div>
+                <div class="prog-bar" style="height:5px; margin:4px 0;">
+                  <div class="prog-fill" style="width:${wPct}%;"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:11px;">
+                  <span>${(w.done_count || 0).toLocaleString()} / ${(w.total_count || 0).toLocaleString()} 문장 (${wPct}%)${wTokTxt}</span>
+                  <span>${w.elapsed_sec || 0}초</span>
+                </div>
+                ${w.status_text ? `<div style="font-size:10.5px; color:var(--text-muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(w.status_text)}</div>` : ''}
+              </div>
+            `;
+          }).join('');
+        } else {
+          workersGrid.style.display = 'none';
+        }
+
+        const tailBox = document.getElementById('streamTailBox');
+        if (sr.tail_preview) {
+          tailBox.style.display = 'block';
+          tailBox.textContent = `⚡ 실시간 수신 토큰: ... ${sr.tail_preview}`;
+        } else {
+          tailBox.style.display = 'none';
+        }
+      }
+
+      if (st.logs && st.logs.length > 0) {
+        const box = document.getElementById('consoleLogBox');
+        const wasNearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 60;
+        box.innerHTML = st.logs.map(l => {
+          let cls = 'log-line';
+          if (l.includes('[WARN]') || l.includes('오류') || l.includes('[재시도')) cls += ' err';
+          else if (l.includes('[OK]') || l.includes('완료')) cls += ' ok';
+          else if (l.includes('번역 메모리(TM)') || l.includes('병렬 작업 큐')) cls += ' tm';
+          return `<div class="${cls}">${escapeHtml(l)}</div>`;
+        }).join('');
+        if (wasNearBottom) box.scrollTop = box.scrollHeight;
+      }
+
+      if (st.samples && st.samples.length > 0) {
+        document.getElementById('livePreviewBody').innerHTML = st.samples.map(sp => `
+          <tr>
+            <td style="font-family:monospace; font-size:11.5px;">${escapeHtml(sp.key)}</td>
+            <td>${escapeHtml(sp.en)}</td>
+            <td style="color:var(--green); font-weight:600;">${escapeHtml(sp.ko)}</td>
+          </tr>
+        `).join('');
+      }
+
+      if (st.just_finished) {
+        const state = await api('/api/state');
+        applyScanResult(state, false);
+      }
+    }, 400);
+  }
+
+  // Glossary Management
+  async function loadGlossary() {
+    glossaryData = await api('/api/glossary');
+    const total = (glossaryData.vanilla_count || 0) + (glossaryData.global_mods_count || 0) +
+                  (glossaryData.mod_specific_total_terms || 0) + (glossaryData.user_custom_count || 0);
+    document.getElementById('glossaryTotalBadge').textContent = `총 ${total.toLocaleString()}개 용어 등록됨`;
+    renderGlossaryTable();
+  }
+
+  function renderGlossaryTable() {
+    if (!glossaryData) return;
+    const layer = document.getElementById('glossaryLayerSelect').value;
+    const q = document.getElementById('glossarySearchInput').value.trim().toLowerCase();
+    const rows = [];
+
+    if (layer === 'all' || layer === 'custom') {
+      (glossaryData.user_custom || []).forEach(item => {
+        rows.push({ orig: item.original, trans: item.translated, mod: item.mod_id, note: item.note || '사용자 커스텀', editable: true });
+      });
+    }
+    if (layer === 'all' || layer === 'mods') {
+      Object.entries(glossaryData.mod_specific || {}).forEach(([modId, dict]) => {
+        Object.entries(dict).forEach(([orig, trans]) => {
+          rows.push({ orig, trans, mod: modId, note: '모드 전용 내장 사전', editable: false });
+        });
+      });
+    }
+    if (layer === 'all' || layer === 'global') {
+      Object.entries(glossaryData.global_mods || {}).forEach(([orig, trans]) => {
+        rows.push({ orig, trans, mod: 'global', note: '모드 공통 사전', editable: false });
+      });
+    }
+    if (layer === 'all' || layer === 'vanilla') {
+      Object.entries(glossaryData.vanilla || {}).forEach(([orig, trans]) => {
+        rows.push({ orig, trans, mod: 'minecraft', note: '바닐라 공식 사전', editable: false });
+      });
+    }
+
+    const filtered = rows.filter(r => {
+      if (!q) return true;
+      return `${r.orig} ${r.trans} ${r.mod} ${r.note}`.toLowerCase().includes(q);
+    });
+
+    document.getElementById('glossaryTableBody').innerHTML = filtered.slice(0, 400).map(r => `
+      <tr>
+        <td style="font-weight:600;">${escapeHtml(r.orig)}</td>
+        <td style="color:var(--green); font-weight:600;">${escapeHtml(r.trans)}</td>
+        <td><span class="badge badge-mod">${escapeHtml(r.mod)}</span></td>
+        <td style="color:var(--text-muted); font-size:12px;">${escapeHtml(r.note)}</td>
+        <td>
+          ${r.editable ? `<button style="padding:3px 8px; font-size:11px;" onclick="deleteCustomTerm('${escapeAttr(r.orig)}', '${escapeAttr(r.mod)}')">삭제</button>` : '-'}
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  async function addGlossaryTerm() {
+    const original = document.getElementById('glOrigInput').value.trim();
+    const translated = document.getElementById('glTransInput').value.trim();
+    const mod_id = document.getElementById('glModInput').value.trim() || 'global';
+    const note = document.getElementById('glNoteInput').value.trim();
+    if (!original || !translated) {
+      alert('영어 원문과 한국어 번역을 모두 입력해 주세요.');
+      return;
+    }
+    await api('/api/glossary/add', 'POST', { original, translated, mod_id, note });
+    document.getElementById('glOrigInput').value = '';
+    document.getElementById('glTransInput').value = '';
+    document.getElementById('glNoteInput').value = '';
+    await loadGlossary();
+  }
+
+  async function deleteCustomTerm(original, mod_id) {
+    await api('/api/glossary/delete', 'POST', { original, mod_id });
+    await loadGlossary();
+  }
+
+  async function importGlossaryCsv() {
+    const csvText = document.getElementById('csvBulkInput').value.trim();
+    if (!csvText) return;
+    const res = await api('/api/glossary/import_csv', 'POST', { csv_text: csvText });
+    alert(`총 ${res.imported_count}개의 용어가 사전에 등록되었습니다.`);
+    await loadGlossary();
+  }
+
+  function exportCustomGlossaryCsv() {
+    if (!glossaryData) return;
+    const lines = ['Original,Translated,ModID,Note'];
+    (glossaryData.user_custom || []).forEach(i => {
+      lines.push(`${i.original},${i.translated},${i.mod_id},${i.note || ''}`);
+    });
+    document.getElementById('csvBulkInput').value = lines.join('\n');
+  }
+
+  // Review & Packager
+  function populateReviewSelector(targetEntryId = null) {
+    const sel = document.getElementById('reviewEntrySelect');
+    const sorted = [...allEntries].sort((a, b) => (b.cached_ko_keys + b.builtin_ko_keys) - (a.cached_ko_keys + a.builtin_ko_keys));
+    sel.innerHTML = sorted.map(e => `
+      <option value="${e.entry_id}">${escapeHtml(e.display_name)} (${e.mod_id}) - 완료 ${e.cached_ko_keys + e.builtin_ko_keys}/${e.total_keys}</option>
+    `).join('');
+    if (targetEntryId) sel.value = targetEntryId;
+    if (sel.value) loadReviewEntry(sel.value);
+  }
+
+  function openReviewFor(entryId) {
+    switchTab('tab-review', document.querySelectorAll('.tab-btn')[3]);
+    populateReviewSelector(entryId);
+  }
+
+  async function loadReviewEntry(entryId) {
+    const data = await api(`/api/review?entry_id=${encodeURIComponent(entryId)}`);
+    reviewRows = data.rows || [];
+    renderReviewTable();
+  }
+
+  function renderReviewTable() {
+    const q = document.getElementById('reviewSearchInput').value.trim().toLowerCase();
+    const entryId = document.getElementById('reviewEntrySelect').value;
+    const filtered = reviewRows.filter(r => {
+      if (!q) return true;
+      return `${r.key} ${r.en} ${r.ko} ${r.old_en || ''}`.toLowerCase().includes(q);
+    });
+
+    document.getElementById('reviewTableBody').innerHTML = filtered.slice(0, 300).map((r, idx) => {
+      let statusBadge = '';
+      if (r.status === 'version_changed') {
+        statusBadge = `<div style="margin-top:4px; font-size:11px; color:var(--yellow); background:rgba(210,153,34,0.14); padding:3px 6px; border-radius:4px;">🔄 <b>버전 원문 변경됨</b> (이전 원문: ${escapeHtml(r.old_en || '')})</div>`;
+      } else if (r.status === 'cached') {
+        statusBadge = `<span style="font-size:10px; color:var(--green); margin-left:4px;">● 보관소/캐시</span>`;
+      } else if (r.status === 'builtin') {
+        statusBadge = `<span style="font-size:10px; color:var(--accent); margin-left:4px;">● 모드 내장</span>`;
+      }
+      return `
+      <tr>
+        <td style="font-family:monospace; font-size:11.5px; word-break:break-all;">${escapeHtml(r.key)} ${statusBadge}</td>
+        <td>${escapeHtml(r.en)}</td>
+        <td>
+          <input type="text" id="revInput_${idx}" value="${escapeAttr(r.ko)}" placeholder="${r.status === 'version_changed' ? '원문 변경으로 재번역 대기 중 (직접 입력 가능)' : ''}" style="width:100%;" />
+        </td>
+        <td>
+          <button style="padding:4px 8px; font-size:11px;" onclick="saveSingleReview('${escapeAttr(entryId)}', '${escapeAttr(r.key)}', '${escapeAttr(r.en)}', 'revInput_${idx}')">저장</button>
+        </td>
+      </tr>
+      `;
+    }).join('');
+  }
+
+  async function saveSingleReview(entryId, key, enText, inputId) {
+    const koText = document.getElementById(inputId).value.trim();
+    await api('/api/review/save', 'POST', { entry_id: entryId, lang_key: key, en_text: enText, ko_text: koText });
+    const row = reviewRows.find(r => r.key === key);
+    if (row) {
+      row.ko = koText;
+      row.status = 'cached';
+    }
+    renderReviewTable();
+  }
+
+  async function buildResourcePack() {
+    const res = await api('/api/export', 'POST', {
+      pack_name: document.getElementById('packNameInput').value.trim() || 'MC-Korean-Translation-Pack',
+      modpack_name: document.getElementById('modpackNameInput').value.trim(),
+      modpack_version: document.getElementById('modpackVersionInput').value.trim(),
+      create_zip: document.getElementById('chkExportZip').checked,
+      create_folder: document.getElementById('chkExportFolder').checked,
+      export_ftbquests: document.getElementById('chkExportQuests').checked,
+      export_kubejs: document.getElementById('chkExportKubejs').checked,
+      auto_enable_options: document.getElementById('chkAutoOptions') ? document.getElementById('chkAutoOptions').checked : true,
+    });
+    const banner = document.getElementById('exportResultBanner');
+    banner.style.display = 'block';
+    const mcFmtBadge = res.mc_version ? `MC ${escapeHtml(res.mc_version)} · pack_format ${res.pack_format}` : `pack_format ${res.pack_format || 15}`;
+    const optMsg = res.options_txt_updated ? '<span style="color:var(--green);">✅ options.txt 리소스팩 & 한국어(ko_kr) 자동 등록 완료 (인게임 리로드 불필요)</span><br/>' : '';
+    banner.innerHTML = `
+      <strong>✅ [${escapeHtml(res.modpack_name)} · ${escapeHtml(res.modpack_version)} (${mcFmtBadge})] 모드팩에 한글 리소스팩 · 퀘스트 · KubeJS 적용 완료!</strong><br/>
+      • 적용된 리소스팩 이름: <code>${escapeHtml(res.pack_name)}.zip</code> (${mcFmtBadge})<br/>
+      ${optMsg}• 적용 내역: 모드 네임스페이스 <b>${res.mod_namespaces_count}개</b> | 가이드북·책자 <b>${res.guidebook_files_written || 0}개</b> | FTB Quests <b>${res.ftbquest_files_written}개</b> | KubeJS 에셋 <b>${res.kubejs_files_written || 0}개</b> | 총 번역 키 <b>${res.total_exported_keys.toLocaleString()}개</b><br/>
+      • 생성 경로:<br/>
+      ${(res.outputs || []).map(p => `<code>${escapeHtml(p)}</code>`).join('<br/>')}
+    `;
+  }
+
+  async function exportStandalonePack() {
+    const packName = document.getElementById('packNameInput').value.trim() || 'MC-Korean-Translation-Pack';
+    const modpackName = document.getElementById('modpackNameInput').value.trim();
+    const modpackVersion = document.getElementById('modpackVersionInput').value.trim();
+    const exportDir = document.getElementById('exportDirInput').value.trim();
+    const incOverride = document.getElementById('chkStandaloneOverride').checked;
+    const res = await api('/api/export/standalone', 'POST', {
+      pack_name: packName,
+      modpack_name: modpackName,
+      modpack_version: modpackVersion,
+      export_dir: exportDir,
+      separate_by_modpack_version: true,
+      include_full_bundle: document.getElementById('chkStandaloneBundle').checked,
+      include_resourcepack: document.getElementById('chkStandaloneRp').checked,
+      include_override: incOverride,
+      include_ftbquests: incOverride,
+      include_kubejs: incOverride,
+      include_mod_archive: document.getElementById('chkStandaloneArchive').checked,
+    });
+    if (res.export_history) {
+      exportHistoryList = res.export_history;
+      renderExportHistory();
+    }
+    const banner = document.getElementById('standaloneExportBanner');
+    banner.style.display = 'block';
+    const dlButtons = (res.download_files || []).map(item => {
+      const fn = typeof item === 'string' ? item : item.filename;
+      const rel = typeof item === 'string' ? item : (item.rel_path || item.filename);
+      const lbl = typeof item === 'string' ? item : `${item.label} (${item.filename})`;
+      const dirParam = res.base_export_dir ? `&dir=${encodeURIComponent(res.base_export_dir)}` : '';
+      return `
+      <a href="/api/export/download?file=${encodeURIComponent(rel)}${dirParam}" download="${escapeAttr(fn)}"
+         style="display:inline-flex; align-items:center; gap:5px; padding:6px 10px; margin:4px 6px 0 0; border-radius:6px; background:var(--bg-card); border:1px solid var(--accent); color:var(--accent); text-decoration:none; font-size:12px; font-weight:600;">
+        ⬇️ ${escapeHtml(lbl)}
+      </a>
+      `;
+    }).join('');
+    banner.innerHTML = `
+      <strong>📤 [${escapeHtml(res.modpack_name)} · ${escapeHtml(res.modpack_version)}] 모드팩·버전별 분리 내보내기 완료!</strong><br/>
+      • 분리 저장 폴더: <code>${escapeHtml(res.export_dir)}</code><br/>
+      • 포함 내역: 모드 네임스페이스 <b>${res.mod_namespaces_count}개</b> | 가이드북·책자 <b>${res.guidebook_files_written || 0}개</b> | FTB Quests 파일 <b>${res.ftbquest_files_written}개</b> | KubeJS 에셋 <b>${res.kubejs_files_written || 0}개</b> | 총 번역 키 <b>${(res.total_exported_keys || 0).toLocaleString()}개</b><br/>
+      <div style="margin-top:6px;">${dlButtons}</div>
+    `;
+  }
+
+  async function importModArchiveFile(inputEl) {
+    const file = inputEl.files && inputEl.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const res = await api('/api/archive/import', 'POST', { archive_data: parsed });
+      inputEl.value = '';
+      if (res.ok) {
+        applyScanResult(res.state);
+        await updateCostSimulation();
+        const imp = res.imported || {};
+        const banner = document.getElementById('standaloneExportBanner');
+        banner.style.display = 'block';
+        banner.innerHTML = `
+          <strong>📥 모드 번역 보관소 병합 완료!</strong><br/>
+          • 총 <b>${(imp.entries_imported || 0).toLocaleString()}개 모드 / ${(imp.keys_imported || 0).toLocaleString()}개 번역 키</b>가 영구 보관소(<code>data/mod_archive/</code>) 및 전역 TM에 등록되었습니다.<br/>
+          • 현재 모드팩과 버전 비교가 즉시 완료되어 동일 원문은 $0 자동 적용되었습니다.
+        `;
+      } else {
+        alert('보관소 불러오기 오류: ' + (res.error || '알 수 없는 오류'));
+      }
+    } catch (err) {
+      inputEl.value = '';
+      alert('JSON 파일 파싱 실패: ' + err.message);
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function escapeAttr(str) {
+    return String(str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  }
+
+  window.addEventListener('DOMContentLoaded', initApp);
+</script>
+</body>
+</html>

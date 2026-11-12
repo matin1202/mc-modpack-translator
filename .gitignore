@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.db
+data/
+exports/
+mod_archive/
+graphify-out/
